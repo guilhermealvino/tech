@@ -1,38 +1,33 @@
 package com.restaurante.tech.adapter.inbound.controller;
 
-import com.restaurante.tech.config.JwtUtil;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import com.restaurante.tech.application.dto.TokenRequestDTO;
+import com.restaurante.tech.application.dto.TokenResponseDTO;
+import com.restaurante.tech.application.service.TokenService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@Tag(name = "Autenticação", description = "API de autenticação com JWT")
 public class AuthController {
 
-    private final JwtUtil jwtUtil;
+    private final TokenService tokenService;
 
-    @PostMapping("/login")
-    @Operation(summary = "Autenticar usuário e gerar token JWT")
-    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> credentials) {
-        String username = credentials.get("username");
-        String password = credentials.get("password");
+    @Value("${auth.password:admin}")
+    private String configuredPassword;
 
-        if ("admin".equals(username) && "admin123".equals(password)) {
-            String token = jwtUtil.generateToken(username);
-            return ResponseEntity.ok(Map.of(
-                    "token", token,
-                    "type", "Bearer"
-            ));
+    @PostMapping("/token")
+    public ResponseEntity<TokenResponseDTO> token(@Valid @RequestBody TokenRequestDTO req) {
+
+        if (!configuredPassword.equals(req.getPassword())) {
+            return ResponseEntity.status(401).build();
         }
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "Credenciais inválidas"));
+        String token = tokenService.generateToken(req.getUsername(), req.getScope());
+        TokenResponseDTO resp = new TokenResponseDTO(token, "Bearer", tokenService.getExpiresInSeconds());
+        return ResponseEntity.ok(resp);
     }
 }
