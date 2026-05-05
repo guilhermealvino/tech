@@ -1,4 +1,3 @@
-// java
 package com.restaurante.tech.config;
 
 import java.nio.charset.StandardCharsets;

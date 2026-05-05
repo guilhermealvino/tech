@@ -23,8 +23,7 @@ public class PagamentoService {
 
         pagamento.setPedido(pedido);
         pagamento.setValor(pedido.getValorTotal());
-        
-        // Simulação de processamento de pagamento
+
         String codigoTransacao = UUID.randomUUID().toString();
         pagamento.confirmarPagamento(codigoTransacao);
 
